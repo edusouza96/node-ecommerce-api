@@ -2,7 +2,7 @@ module.exports = {
     host: "smtp.gmail.com",
     port: 465,
     auth: {
-        user: "email",
-        pass: "senha"
+        user: "mail",
+        pass: "pass"
     }
 };
