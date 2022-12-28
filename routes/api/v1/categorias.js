@@ -17,5 +17,8 @@ router.post("/", auth.required, LojaValidation.admin, Validation(CategoriaValida
 router.put("/:id", auth.required, LojaValidation.admin, Validation(CategoriaValidation.update), categoriaController.update);
 router.delete("/:id", auth.required, LojaValidation.admin, Validation(CategoriaValidation.remove), categoriaController.remove);
 
+// ROTAS AO PRODUTO
+router.get("/:id/produtos", categoriaController.showProdutos);
+router.put("/:id/produtos", auth.required, LojaValidation.admin, categoriaController.updateProdutos );
 
 module.exports = router;
