@@ -10,8 +10,8 @@ const _criarPagamentoComBoleto = (senderHash, { cliente, carrinho, entrega, paga
             name: cliente.nome,
             email: cliente.usuario.email,
             cpf_cnpj: cliente.cpf.replace(/[-\.]/g, ""),
-            area_code: cliente.telefones[0].slice(0,2),
-            phone: cliente.telefones[0].slice(2).trim().split(" ").join(""),
+            area_code: cliente.telefones[0].replace(/[(-)]/g, "").slice(0,2),
+            phone: cliente.telefones[0].replace(/[(-)]/g, "").slice(2).trim().split(" ").join(""),
             birth_date: cliente.dataDeNascimento // formato DD/MM/YYYY
         });
 
@@ -66,8 +66,8 @@ const _criarPagamentoComCartao = (senderHash, { cliente, carrinho, entrega, paga
             name: cliente.nome,
             email: cliente.usuario.email,
             cpf_cnpj: cliente.cpf.replace(/[-\.]/g, ""),
-            area_code: cliente.telefones[0].slice(0,2),
-            phone: cliente.telefones[0].slice(2).trim().split(" ").join(""),
+            area_code: cliente.telefones[0].replace(/[(-)]/g, "").slice(0,2),
+            phone: cliente.telefones[0].replace(/[(-)]/g, "").slice(2).trim().split(" ").join(""),
             birth_date: cliente.dataDeNascimento // formato DD/MM/YYYY
         });
 
@@ -105,8 +105,8 @@ const _criarPagamentoComCartao = (senderHash, { cliente, carrinho, entrega, paga
 
         pag.setCreditCardHolder({
             name: pagamento.cartao.nomeCompleto || cliente.nome,
-            area_code: pagamento.cartao.codigoArea.trim() || cliente.telefones[0].slice(0,2),
-            phone: (pagamento.cartao.telefone.trim() || cliente.telefones[0].slice(2)).split(" ").join(""),
+            area_code: pagamento.cartao.codigoArea.replace(/[(-)]/g, "").trim() || cliente.telefones[0].replace(/[(-)]/g, "").slice(0,2),
+            phone: (pagamento.cartao.telefone.replace(/[(-)]/g, "").trim() || cliente.telefones[0].replace(/[(-)]/g, "").slice(2)).split(" ").join(""),
             birth_date: pagamento.cartao.dataDeNascimento || cliente.dataDeNascimento,
             cpf_cnpj: ( pagamento.cartao.cpf || cliente.cpf ).replace(/[-\.]/g, "")
         });

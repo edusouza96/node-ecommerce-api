@@ -1,3 +1,4 @@
 node_modules/
 package-lock.json
 config/email.js
+config/pagseguro.example.js

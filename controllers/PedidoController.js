@@ -8,6 +8,7 @@ const Cliente = mongoose.model("Cliente");
 const RegistroPedido = mongoose.model("RegistroPedido");
 
 const { calcularFrete } = require("./integracoes/correios");
+const PagamentoValidation = require("./validacoes/pagamentoValidation");
 const EntregaValidation = require("./validacoes/entregaValidation");
 
 const CarrinhoValidation = require("./validacoes/carrinhoValidation");
@@ -158,42 +159,43 @@ class PedidoController{
     async store(req, res, next){
         const { carrinho, pagamento, entrega } = req.body;
         const { loja } = req.query;
-        // const _carrinho = carrinho.slice();
+        const _carrinho = carrinho.slice();
         try {   
             // CHECAR DADOS DO CARRINHO
             if(!await CarrinhoValidation(carrinho)) return res.status(422).send({ error: "Carrinho Inválido" });
 
-            const cliente = await Cliente.findOne({ usuario: req.payload.id });
-
-            // if(!await QuantidadeValidation.validarQuantidadeDisponivel(carrinho)) return res.status(400).send({ error: "Produtos não tem quantidade disponivel" });
+            const cliente = await Cliente.findOne({ usuario: req.payload.id }).populate({ path: 'usuario', 'select' : '_id nome email'});
 
             // CHECAR DADOS DE ENTREGA
             if(!await EntregaValidation.checarValorPrazo(cliente.endereco.CEP, carrinho, entrega)) return res.status(422).send({ error: "Dados de Entrega Inválidos" });
 
             // CHECAR DADOS DO PAGAMENTO
-            // if(!await PagamentoValidation.checarValorTotal({carrinho, entrega, pagamento})) return res.status(422).send({ error: "Dados de Pagamento Inválidos" });
-
+            if(!await PagamentoValidation.checarValorTotal({carrinho, entrega, pagamento})) return res.status(422).send({ error: "Dados de Pagamento Inválidos" });
+            if(!PagamentoValidation.checarCartao(pagamento)) return res.status(422).send({ error: "Dados de Pagamento com cartão Inválidos" });
 
             const novoPagamento = new Pagamento({
                 valor: pagamento.valor,
+                parcelas: pagamento.parcelas || 1,
                 forma: pagamento.forma,
                 status: "iniciando",
-                payload: pagamento,
+                endereco: pagamento.endereco,
+                cartao: pagamento.cartao,
+                enderecoEntregaIgualCobranca: pagamento.enderecoEntregaIgualCobranca,
                 loja
             });
 
-            const novaEntrega = new Entrega ({
+            const novaEntrega = new Entrega({
                 status: "nao_iniciado",
                 custo: entrega.custo,
                 prazo: entrega.prazo,
                 tipo: entrega.tipo,
-                payload: pagamento,
+                endereco: entrega.endereco,
                 loja
             });
 
             const pedido = new Pedido({ 
                 cliente: cliente._id, 
-                carrinho,
+                carrinho: _carrinho,
                 pagamento: novoPagamento._id, 
                 entrega: novaEntrega._id, 
                 loja 
@@ -214,7 +216,6 @@ class PedidoController{
             
             return res.send({ pedido: Object.assign({}, pedido._doc, { entrega: novaEntrega, pagamento: novoPagamento, cliente }) });
         }catch(e){
-            console.log(e);
             next(e);
         }
     }
