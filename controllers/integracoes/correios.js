@@ -42,6 +42,7 @@ const calcularFrete = async ({cep, produtos}) => {
         return resultados;
     } catch (e) {
         console.log(e);
+        next(e);
     }
 }
 

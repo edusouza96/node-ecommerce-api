@@ -22,6 +22,7 @@ const VariacaoSchema = Schema({
         }
     },
     quantidade: { type: Number, default: 0 },
+    quantidadeBloqueada: { type: Number, default: 0 },
     produto: { type: Schema.Types.ObjectId, ref: "Produto", required: true },
     loja: { type: Schema.Types.ObjectId, ref: "Loja", required: true }
 }, { timestamps: true });

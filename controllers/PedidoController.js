@@ -11,6 +11,7 @@ const RegistroPedido = mongoose.model("RegistroPedido");
 const { calcularFrete } = require("./integracoes/correios");
 const PagamentoValidation = require("./validacoes/pagamentoValidation");
 const EntregaValidation = require("./validacoes/entregaValidation");
+const QuantidadeValidation = require("./validacoes/quantidadeValidation");
 
 const EmailController = require("./EmailController");
 
@@ -86,6 +87,8 @@ class PedidoController{
             EmailController.cancelarPedido({usuario: pedido.cliente.usuario, pedido });
 
             await pedido.save();
+
+            await QuantidadeValidation.atualizarQuantidade("cancelar_pedido",  pedido);
 
             return res.send({ cancelado: true });
         } catch (e) {
@@ -175,6 +178,7 @@ class PedidoController{
 
             const cliente = await Cliente.findOne({ usuario: req.payload.id }).populate({ path: 'usuario', 'select' : '_id nome email'});
 
+            if(!await QuantidadeValidation.validarQuantidadeDisponivel(carrinho)) return res.status(400).send({ error: "Produtos não tem quantidade disponivel" });
             // CHECAR DADOS DE ENTREGA
             if(!await EntregaValidation.checarValorPrazo(cliente.endereco.CEP, carrinho, entrega)) return res.status(422).send({ error: "Dados de Entrega Inválidos" });
 
@@ -215,6 +219,7 @@ class PedidoController{
             await pedido.save();
             await novoPagamento.save();
             await novaEntrega.save();
+            await QuantidadeValidation.atualizarQuantidade("salvar_pedido",  pedido);
 
             const registroPedido = new RegistroPedido({
                 pedido: pedido._id,
@@ -256,6 +261,8 @@ class PedidoController{
             });
 
             await pedido.save();
+
+            await QuantidadeValidation.atualizarQuantidade("cancelar_pedido",  pedido);
 
             return res.send({ cancelado: true });  
         } catch (e) {
