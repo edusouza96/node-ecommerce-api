@@ -8,6 +8,7 @@ const Produto = mongoose.model("Produto");
 const Variacao = mongoose.model("Variacao");
 const RegistroPedido = mongoose.model("RegistroPedido");
 
+const EmailController = require("./EmailController");
 class PagamentoController {
 
     // CLIENTES
@@ -91,10 +92,18 @@ class PagamentoController {
                 situacao: status
             });
             await registroPedido.save();
+
             // Enviar email de aviso para o cliente - aviso de atualizacao de pagamento
-
+            const pedido = await Pedido.findById(pagamento.pedido).populate({ path: "cliente", populate: { path: "usuario" } });
+            EmailController.atualizarPedido({ 
+                usuario: pedido.cliente.usuario, 
+                pedido, 
+                tipo: "pagamento", 
+                status,
+                data: new Date()
+            });
+            
             await pagamento.save();
-
             return res.send({ pagamento });
         }catch(e){
             next(e);
@@ -144,6 +153,14 @@ class PagamentoController {
                 
                 await registroPedido.save();
                 // Enviar email de aviso para o cliente - aviso de atualizacao de pagamento
+                const pedido = await Pedido.findById(pagamento.pedido).populate({ path: "cliente", populate: { path: "usuario" } });
+                EmailController.atualizarPedido({ 
+                    usuario: pedido.cliente.usuario, 
+                    pedido, 
+                    tipo: "pagamento", 
+                    status: situacao.status,
+                    data: new Date()
+                });
             }
             return res.send({ success: true });
 
